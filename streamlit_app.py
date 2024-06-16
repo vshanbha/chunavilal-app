@@ -31,10 +31,46 @@ def load_data():
     file_path = "downloads/candidate_data.json"
     with open(file_path) as json_file:
         candidate_list = json.load(json_file)
+
+    file_path = "downloads/uncontested.json"
+    with open(file_path) as json_file:
+        uncontested = json.load(json_file)
+        if not (not uncontested or len(uncontested) == 0):
+            for val in uncontested:
+                val["votes"] = None
+                val["margin"] = None
+                candidate_list.append(val)
     if (candidate_list):
         return pd.DataFrame(candidate_list)
     else:
         return None
+    
+def show_wins(won_df, ct):
+    # Group by party and calculate the number of wins
+    wins_df = won_df.groupby("party").size().reset_index(name="wins")
+    if (wins_df["wins"].count()>10):
+        wins_df.loc[wins_df["wins"] < 2, "party"] = "Others"
+    fig1 = px.pie(wins_df, values="wins", names="party", title="Wins by Party:")
+    fig1.update_traces(textinfo="value", hoverinfo="label+percent+value")
+    ct.plotly_chart(fig1,use_container_width=True)
+
+def show_percentage(grouped_df, ct):
+    fig1 = px.pie(grouped_df, values="percentage_vote", names="party_name", title="Vote Percentage by Party:",
+                  hover_data=["votes"])
+    ct.plotly_chart(fig1,use_container_width=True)
+
+
+def get_vote_percentage(df):
+    # Replace name of Party with "Others" if percentage of total votes is less than 3
+    gf = df.groupby("party")["votes"].sum().to_frame()
+    gf["percentage_vote"] = gf["votes"] * 100/ total_votes
+
+    gf["party_name"] = gf.index
+    gf["party_name"] = gf["party_name"].mask(
+        (gf['percentage_vote'] < 1.0) & 
+        ((gf["party_name"] != "Independent") & (gf["party_name"] != "None of the Above")), "Others")
+    
+    return gf
 
 df = load_data()
 
@@ -65,37 +101,26 @@ constituencies = won_df["constituency_code"].unique()
 st.info("""Aggregate stats for {}.\n
         Total votes {} split across {} parties and {} constituencies"""
         .format(sel_state,total_votes, len(parties), len(constituencies)))
+col1, col2 = st.columns(2)
 
-# Group by party and calculate the number of wins
-wins_df = won_df.groupby("party").size().reset_index(name="wins")
+show_wins(won_df, col1);
 
-if (wins_df["wins"].count()>10):
-    wins_df.loc[wins_df["wins"] < 2, "party"] = "Others"
-fig1 = px.pie(wins_df, values="wins", names="party", title="Seats for each Party")
-fig1.update_traces(textinfo="value", hoverinfo="label+percent+value")
-st.plotly_chart(fig1,use_container_width=True)
+grouped_df = get_vote_percentage(of)
+show_percentage(grouped_df, col2)
 
-# Replace name of Party with "Others" if percentage of total votes is less than 3
-gf = of.groupby("party")["votes"].sum().to_frame()
-gf["percentage_vote"] = gf["votes"] * 100/ total_votes
-
-gf["party_name"] = gf.index
-gf["party_name"] = gf["party_name"].mask(
-    (gf['percentage_vote'] < 3.0) & 
-    ((gf["party_name"] != "Independent") & (gf["party_name"] != "None of the Above")), "Others")
-
-show_parties = gf["party_name"].unique()
+# Show constituency wise distribution
+show_parties = grouped_df["party_name"].unique()
 of["party_name"] = of["party"].copy()
 mask = ~of["party"].isin(show_parties)
 of.loc[mask, "party_name"] = "Others"
 
 fig = px.bar(of, y="constituency_name", x="votes", color="party_name",orientation="h",
              hover_data=["party","name","status","votes","margin"], height=800,
-             title="Vote Percentage by Constituency")
+             title="Vote Percentage by Constituency:")
 st.plotly_chart(fig,use_container_width=True)
 
 # Raw Data
-
+st.markdown("Candidate wise vote information:")
 st.dataframe(of, column_config={
         "url" : st.column_config.ImageColumn(
              "Photo",help="Photo of the candidate"
@@ -112,5 +137,5 @@ st.dataframe(of, column_config={
     },
     column_order=("name","status","votes","margin","party","constituency_name"),
     use_container_width=True,
-    hide_index=True,
+    hide_index=True
     )
