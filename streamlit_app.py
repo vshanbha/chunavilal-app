@@ -40,10 +40,15 @@ df = load_data()
 
 df["votes"] = pd.to_numeric(df["votes"])
 
-# Offer option to select state / Union Territory
-sel_state = st.selectbox("Select State or Union Territory", df["state_name"].unique())
+states = df["state_name"].unique()
+states = ["All India", *states ]
 
-of = df.query("state_name == @sel_state")
+# Offer option to select state / Union Territory
+sel_state = st.selectbox("Select State or Union Territory", states)
+
+of = df
+if "All India" != sel_state:
+    of = df.query("state_name == @sel_state")
 
 # Total votes
 total_votes = of["votes"].sum()
@@ -63,7 +68,12 @@ st.info("""Aggregate stats for {}.\n
 
 # Group by party and calculate the number of wins
 wins_df = won_df.groupby("party").size().reset_index(name="wins")
-wins_df
+
+if (wins_df["wins"].count()>10):
+    wins_df.loc[wins_df["wins"] < 2, "party"] = "Others"
+fig1 = px.pie(wins_df, values="wins", names="party", title="Seats for each Party")
+fig1.update_traces(textinfo="value", hoverinfo="label+percent+value")
+st.plotly_chart(fig1,use_container_width=True)
 
 # Replace name of Party with "Others" if percentage of total votes is less than 3
 gf = of.groupby("party")["votes"].sum().to_frame()
@@ -79,9 +89,9 @@ of["party_name"] = of["party"].copy()
 mask = ~of["party"].isin(show_parties)
 of.loc[mask, "party_name"] = "Others"
 
-fig = px.bar(of, x="constituency_name", y="votes", color="party_name",
-#              color_discrete_map = color_map,
-             hover_data=['party','status','votes','margin'],height=600)
+fig = px.bar(of, y="constituency_name", x="votes", color="party_name",orientation="h",
+             hover_data=["party","name","status","votes","margin"], height=800,
+             title="Vote Percentage by Constituency")
 st.plotly_chart(fig,use_container_width=True)
 
 # Raw Data
@@ -102,4 +112,5 @@ st.dataframe(of, column_config={
     },
     column_order=("name","status","votes","margin","party","constituency_name"),
     use_container_width=True,
-    hide_index=True)
+    hide_index=True,
+    )
