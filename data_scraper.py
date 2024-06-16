@@ -96,7 +96,7 @@ def extract_data_India_assembly_2024():
         json.dump(all_candidates_list, json_file, indent=4)
     print(f"JSON data saved to {file_path}")
     
-    file_path = "database/unconstested.json"
+    file_path = "database/uncontested.json"
     with open(file_path, "w") as json_file:
         json.dump(uncontested, json_file, indent=4)
 
@@ -108,5 +108,5 @@ def zipDirectory(dirName):
         for file_path in directory.iterdir():
             archive.write(file_path, arcname=file_path.name)
 
-extract_data_India_assembly_2024()
+# extract_data_India_assembly_2024()
 zipDirectory("database/")
