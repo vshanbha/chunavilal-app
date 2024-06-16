@@ -1,9 +1,9 @@
-# 🗳️ Chunavi Sanket Election Analyst App
+# 🗳️ Chunavilal Election Analyst App
 
 Created with Streamlit, Plotly and Selenium
 
 ## Demo App
-[![🗳️ Chunavi Sanket App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://text-c3po.streamlit.app/)
+[![🗳️ Chunavilal](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://text-c3po.streamlit.app/)
 
 
 ## Getting Started as developer

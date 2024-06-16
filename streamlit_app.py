@@ -1,19 +1,20 @@
 import streamlit as st
 import pandas as pd
 import json
+import zipfile
 
 import plotly.express as px
 # from langchain_openai import ChatOpenAI
 # from langchain.prompts.chat import ChatPromptTemplate, SystemMessagePromptTemplate, HumanMessagePromptTemplate, AIMessagePromptTemplate
 
 st.set_page_config(
-    page_title='Chunavi Sanket',
+    page_title='Chunavilal',
     page_icon=':ballot_box_with_ballot:',
     layout="wide"
 
 )
 
-st.title("Chunavi Sanket App")
+st.title("Chunavilal")
 # if "API_KEY" in st.secrets:
 #     openai_api_key = st.secrets["API_KEY"]
 # else:
@@ -21,7 +22,13 @@ st.title("Chunavi Sanket App")
 
 @st.cache_data(ttl="2h")
 def load_data():
-    file_path = "database/candidate_data.json"
+    zipPath = "database.zip"
+    with zipfile.ZipFile(zipPath, mode="r") as archive:
+        for file in archive.namelist():
+            if file.endswith(".json"):
+                archive.extract(file, "downloads/")
+
+    file_path = "downloads/candidate_data.json"
     with open(file_path) as json_file:
         candidate_list = json.load(json_file)
     if (candidate_list):
