@@ -1,25 +1,28 @@
-# 📦 Streamlit App Starter Kit 
-```
-⬆️ (Replace above with your app's name)
-```
+# :ballot_box_with_ballot: Chunavi Sanket Election Analyst App
 
-Description of the app ...
+Created with Streamlit, Plotly and Selenium
 
 ## Demo App
+[![:ballot_box_with_ballot: Chunavi Sanket App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://text-c3po.streamlit.app/)
 
-[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://app-starter-kit.streamlit.app/)
 
-## GitHub Codespaces
+## Getting Started as developer
 
-[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/streamlit/app-starter-kit?quickstart=1)
+### Prerequisites
 
-## Section Heading
+Python version 3.12
 
-This is filler text, please replace this with text for this section.
+### Installation
+Create Python venv
+Open a terminal and run:
 
-## Further Reading
+```bash
+$ python3.12 -m venv .venv
+$ source .venv/bin/activate
+$ pip install -r requirements.txt
+$ streamlit run streamlit_app.py
+```
 
-This is filler text, please replace this with a explanatory text about further relevant resources for this repo
-- Resource 1
-- Resource 2
-- Resource 3
+## References
+
+### https://www.slingacademy.com/article/pandas-dataframe-adding-a-percentage-column-based-on-other-columns/
