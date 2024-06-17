@@ -43,9 +43,9 @@ def start_chat(df, ct):
         )
 
         with history.chat_message("assistant"):
-            st_cb = StreamlitCallbackHandler(history.container(), expand_new_thoughts=False)
-            response = pandas_df_agent.run(st.session_state.messages, callbacks=[st_cb])
-#           response = pandas_df_agent.run(st.session_state.messages)
+#            st_cb = StreamlitCallbackHandler(history.container(), expand_new_thoughts=False)
+#            response = pandas_df_agent.run(st.session_state.messages, callbacks=[st_cb])
+            response = pandas_df_agent.run(st.session_state.messages)
             st.session_state.messages.append({"role": "assistant", "content": response})
             history.write(response)
 
@@ -124,12 +124,12 @@ charts, raw_data = st.tabs(["Charts", "Raw Data"])
 with raw_data:
     # Raw Data
     raw, chat = raw_data.columns(2)
+    down_df = df[["name","constituency_name","party","status","votes","margin"]]
 
-    start_chat(df, chat)
+    start_chat(down_df, chat)
 
     with raw:
         raw.markdown("Candidate wise vote information:")
-        down_df = df[["name","constituency_name","party","status","votes","margin"]]
         filtered_df = dataframe_explorer(down_df, case=False)
         raw.dataframe(filtered_df, column_config={
                 "name": "Candidate name",
