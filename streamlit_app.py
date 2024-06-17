@@ -37,7 +37,12 @@ def start_chat(df, ct):
         pandas_df_agent = create_pandas_dataframe_agent(
             llm,
             df,
-#            verbose=True,
+            verbose=True,
+            prefix="""You are Chunavilal the election result analyst bot.
+                Respond strictly using the dataframe. 
+                Generate code to answer the queries using Pandas and Python and execute that code.
+                If you can't find data in the dataframe, then indicate that you do not have the data
+                """,
             agent_type=AgentType.OPENAI_FUNCTIONS,
             allow_dangerous_code=True
         )
