@@ -1,6 +1,6 @@
 # 🗳️ Chunavilal Election Analyst App
 
-Created with Streamlit, Plotly and Selenium
+Created with Streamlit, Plotly, Langchain and Selenium
 
 ## Demo App
 [![🗳️ Chunavilal](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://text-c3po.streamlit.app/)
