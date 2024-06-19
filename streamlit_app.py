@@ -38,10 +38,18 @@ def start_chat(df, ct):
             llm,
             df,
             verbose=True,
-            prefix="""You are Chunavilal the election result analyst bot.
-                Respond strictly using the dataframe. 
-                Generate code to answer the queries using Pandas and Python and execute that code.
-                If you can't find data in the dataframe, then indicate that you do not have the data
+            prefix="""Respond strictly using the dataframe provided as input. 
+                The dataframe contains the following columns:
+                name : Name of the candidate,
+                constituency_name : Name of the constituency,
+                state_name : State or Union Territory which the constituency is a part of,
+                party : Name of the party to which the candidate belongs,
+                status : Whether the candidate won or lost,
+                votes : Number of votes received by the candidate,
+                margin : Victory or defeat margin for the candidate.
+                
+                Translate the question to a query for the dataframe, execute the query and then respond to the question.
+                If you can't find data in the input dataframe, then indicate that you do not have the data
                 """,
             agent_type=AgentType.OPENAI_FUNCTIONS,
             allow_dangerous_code=True
@@ -124,22 +132,23 @@ states = df["state_name"].unique()
 states = ["All India", *states ]
 
 
-charts, raw_data = st.tabs(["Charts", "Raw Data"])
+charts, raw_data, chat = st.tabs(["Charts", "Raw Data", "Chat with Chunavilal"])
+
+down_df = df[["name","constituency_name","state_name","party","status","votes","margin"]]
+
+start_chat(down_df, chat)
+
 
 with raw_data:
     # Raw Data
-    raw, chat = raw_data.columns(2)
-    down_df = df[["name","constituency_name","party","status","votes","margin"]]
-
-    start_chat(down_df, chat)
-
-    with raw:
-        raw.markdown("Candidate wise vote information:")
+    with raw_data:
+        raw_data.markdown("Candidate wise vote information:")
         filtered_df = dataframe_explorer(down_df, case=False)
-        raw.dataframe(filtered_df, column_config={
+        raw_data.dataframe(filtered_df, column_config={
                 "name": "Candidate name",
                 "party": "Party",
                 "constituency_name": "Constituency",
+                "state_name": "State / Union Territory",
                 "status": "Status",
                 "votes": st.column_config.NumberColumn(
                     "Votes",
@@ -147,7 +156,7 @@ with raw_data:
                 ),
                 "margin": st.column_config.NumberColumn("Margin",format="%+i")
             },
-            column_order=("name","party","constituency_name","status","votes","margin"),
+            column_order=("name","party","constituency_name","state_name","status","votes","margin"),
                 use_container_width=True,
                 hide_index=True
         )
