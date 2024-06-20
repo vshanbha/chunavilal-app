@@ -3,7 +3,7 @@
 Created with Streamlit, Plotly, Langchain and Selenium
 
 ## Demo App
-[![🗳️ Chunavilal](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://text-c3po.streamlit.app/)
+[![🗳️ Chunavilal](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://chunavilal-app.streamlit.app/)
 
 
 ## Getting Started as developer
