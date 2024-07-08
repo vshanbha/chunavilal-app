@@ -17,7 +17,12 @@ st.set_page_config(
 )
 
 def start_chat(df, ct):
-    ct.markdown("Ask Chunavilal about the election results?")
+    ct.subheader("Ask Chunavilal about the election results?")
+    ct.markdown("A few sample questions")
+    ct.chat_message("user").write("how many votes did NOTA get as a percentage of total votes across the country")
+    ct.chat_message("assistant").write("The NOTA (None of the Above) option received approximately 0.99% of the total votes across the country.")
+    ct.chat_message("user").write("how did Modi do in the election")
+    ct.chat_message("assistant").write("Narendra Modi contested from the Varanasi constituency in Uttar Pradesh and won the election with 612970 votes and a margin of 152513 votes.")
     history = ct.container(height=400)
     if "messages" not in st.session_state or ct.button("Clear conversation history"):
         st.session_state["messages"] = [{"role": "assistant", "content": "How can I help you?"}]
