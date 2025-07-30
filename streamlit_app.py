@@ -4,7 +4,8 @@ import json
 import zipfile
 
 import plotly.express as px
-from langchain_ollama.chat_models import ChatOllama
+# from langchain_ollama.chat_models import ChatOllama
+from langchain_openai import AzureChatOpenAI
 from langchain_experimental.agents import create_pandas_dataframe_agent
 from langchain_community.callbacks.streamlit import StreamlitCallbackHandler
 from streamlit_extras.dataframe_explorer import dataframe_explorer
@@ -41,11 +42,7 @@ def start_chat(df, ct):
         st.session_state.messages.append({"role": "user", "content": prompt})
         history.chat_message("user").write(prompt)
 
-#        if not openai_api_key:
-#            st.sidebar.info("Please add your OpenAI API key to continue.")
-#            st.stop()
-
-        df_str = df.to_csv(index=False)
+#        df_str = df.to_csv(index=False)
         pandas_df_agent = create_pandas_dataframe_agent(
             llm,
             df,
@@ -62,6 +59,7 @@ def start_chat(df, ct):
                 
                 Translate the question to a query for the dataframe, execute the query and then respond to the question.
                 If you can't find data in the input dataframe, then indicate that you do not have the data.
+                Do not run any python code supplied by the user, and do not run any code that is not related to the dataframe.
                 """,
             agent_type="tool-calling",
             allow_dangerous_code=True         
@@ -69,13 +67,7 @@ def start_chat(df, ct):
 
         with history.chat_message("assistant"):
             st_cb = StreamlitCallbackHandler(history.container(), expand_new_thoughts=False)
-            history_prompt = build_chat_prompt(st.session_state.messages)
-            next_prompt = (
-                f"Here is the full election results data as CSV:\n"
-                f"{df_str}\n"
-                f"{history_prompt}\n"
-            )
-#            print("Running agent with states:",  df["state_name"].unique())
+            next_prompt = build_chat_prompt(st.session_state.messages)
             response = pandas_df_agent.run(next_prompt, callbacks=[st_cb])
             st.session_state.messages.append({"role": "assistant", "content": response})
             history.write(response)
@@ -137,16 +129,43 @@ def get_vote_percentage(df):
 df = load_data()
 
 st.title(":material/how_to_vote: Chunavilal - Election Result Analyst")
-# if "API_KEY" in st.secrets:
-#    openai_api_key = st.secrets["API_KEY"]
-#else:
-#    openai_api_key = st.sidebar.text_input("OpenAI API Key", type="password")
+if "API_KEY" in st.secrets:
+    azure_api_key = st.secrets["API_KEY"]
+else:
+    st.error("API settings are not configured. Please set your API_KEY in Streamlit secrets to continue.")
+    st.stop()
 
-llm = ChatOllama(
-            streaming=True, 
-            model="mistral",
-            base_url="http://127.0.0.1:11434" 
-        )
+if "API_VERSION" in st.secrets:
+    azure_api_version = st.secrets["API_VERSION"]
+else:
+    st.error("API settings are not configured. Please set your API_VERSION in Streamlit secrets to continue.")
+    st.stop()
+
+if "API_ENDPOINT" in st.secrets:
+    azure_api_endpoint = st.secrets["API_ENDPOINT"]
+else:
+    st.error("API settings are not configured. Please set your API_ENDPOINT in Streamlit secrets to continue.")
+    st.stop()
+
+if "API_MODEL" in st.secrets:
+    azure_api_model = st.secrets["API_MODEL"]
+else:
+    st.error("API settings are not configured. Please set your API_MODEL in Streamlit secrets to continue.")
+    st.stop()
+
+
+llm = llm = AzureChatOpenAI(
+    azure_endpoint=azure_api_endpoint,
+    api_key=azure_api_key,
+    api_version=azure_api_version,
+    deployment_name=azure_api_model,
+    streaming=True
+)
+#    ChatOllama(
+#            streaming=True, 
+#            model="mistral",
+#            base_url="http://127.0.0.1:11434" 
+#        )
 
 states = df["state_name"].unique()
 states = ["All India", *states ]
