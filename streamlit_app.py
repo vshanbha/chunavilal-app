@@ -4,17 +4,24 @@ import json
 import zipfile
 
 import plotly.express as px
-from langchain_openai import ChatOpenAI
-from langchain.agents import AgentType
+from langchain_ollama.chat_models import ChatOllama
 from langchain_experimental.agents import create_pandas_dataframe_agent
 from langchain_community.callbacks.streamlit import StreamlitCallbackHandler
 from streamlit_extras.dataframe_explorer import dataframe_explorer
 
 st.set_page_config(
     page_title='Chunavilal',
-    page_icon=':ballot_box_with_ballot:',
+    page_icon=':material/how_to_vote:',
     layout="wide"
 )
+
+# Build a prompt from the full chat history
+def build_chat_prompt(messages):
+    prompt = ""
+    for msg in messages:
+        role = "User" if msg["role"] == "user" else "Assistant"
+        prompt += f"{role}: {msg['content']}\n"
+    return prompt
 
 def start_chat(df, ct):
     ct.subheader("Ask Chunavilal about the election results?")
@@ -34,11 +41,11 @@ def start_chat(df, ct):
         st.session_state.messages.append({"role": "user", "content": prompt})
         history.chat_message("user").write(prompt)
 
-        if not openai_api_key:
-            st.sidebar.info("Please add your OpenAI API key to continue.")
-            st.stop()
+#        if not openai_api_key:
+#            st.sidebar.info("Please add your OpenAI API key to continue.")
+#            st.stop()
 
-
+        df_str = df.to_csv(index=False)
         pandas_df_agent = create_pandas_dataframe_agent(
             llm,
             df,
@@ -54,16 +61,22 @@ def start_chat(df, ct):
                 margin : Victory or defeat margin for the candidate.
                 
                 Translate the question to a query for the dataframe, execute the query and then respond to the question.
-                If you can't find data in the input dataframe, then indicate that you do not have the data
+                If you can't find data in the input dataframe, then indicate that you do not have the data.
                 """,
-            agent_type=AgentType.OPENAI_FUNCTIONS,
-            allow_dangerous_code=True
+            agent_type="tool-calling",
+            allow_dangerous_code=True         
         )
 
         with history.chat_message("assistant"):
-#            st_cb = StreamlitCallbackHandler(history.container(), expand_new_thoughts=False)
-#            response = pandas_df_agent.run(st.session_state.messages, callbacks=[st_cb])
-            response = pandas_df_agent.run(st.session_state.messages)
+            st_cb = StreamlitCallbackHandler(history.container(), expand_new_thoughts=False)
+            history_prompt = build_chat_prompt(st.session_state.messages)
+            next_prompt = (
+                f"Here is the full election results data as CSV:\n"
+                f"{df_str}\n"
+                f"{history_prompt}\n"
+            )
+#            print("Running agent with states:",  df["state_name"].unique())
+            response = pandas_df_agent.run(next_prompt, callbacks=[st_cb])
             st.session_state.messages.append({"role": "assistant", "content": response})
             history.write(response)
 
@@ -123,14 +136,16 @@ def get_vote_percentage(df):
 
 df = load_data()
 
-st.title(":ballot_box_with_ballot: Chunavilal - Election Result Analyst")
-if "API_KEY" in st.secrets:
-    openai_api_key = st.secrets["API_KEY"]
-else:
-    openai_api_key = st.sidebar.text_input("OpenAI API Key", type="password")
+st.title(":material/how_to_vote: Chunavilal - Election Result Analyst")
+# if "API_KEY" in st.secrets:
+#    openai_api_key = st.secrets["API_KEY"]
+#else:
+#    openai_api_key = st.sidebar.text_input("OpenAI API Key", type="password")
 
-llm = ChatOpenAI(
-            temperature=0, openai_api_key=openai_api_key, streaming=True
+llm = ChatOllama(
+            streaming=True, 
+            model="mistral",
+            base_url="http://127.0.0.1:11434" 
         )
 
 states = df["state_name"].unique()
